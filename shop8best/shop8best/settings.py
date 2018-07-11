@@ -25,7 +25,7 @@ SECRET_KEY = '!&3lyp*(ns$+dy8jf!%e1ykmno2%&*80r(ioy%bx!ck=ot!2l6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['139.59.58.132','192.168.0.2','192.168.0.3','0.0.0.0','192.168.0.5','192.168.0.6','10.21.20.24','localhost']
+ALLOWED_HOSTS = ['139.59.58.132']
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtpout.asia.secureserver.net'
@@ -122,7 +122,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-MEDIA_ROOT = '/root/sunmoonserver/shop8best/media/'
+MEDIA_ROOT = '/root/shop8best/shop8best/media/'
 
 MEDIA_URL = '/media/'
 

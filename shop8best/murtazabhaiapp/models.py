@@ -68,8 +68,8 @@ class UserAddresses(models.Model):
 class CartItems(models.Model):
     item = models.ForeignKey(Items,related_name='item',on_delete=None)
     item_quantity = models.IntegerField()
-    item_size = models.FloatField()
-    item_size_type = models.CharField(max_length=20)
+    item_size = models.FloatField(default=None, blank=True, null=True)
+    item_size_type = models.CharField(max_length=20,default=None, blank=True, null=True)
     user_email = models.ForeignKey(UserAccount,db_column='user_email',on_delete=None)
 
     def __str__(self):
@@ -93,8 +93,8 @@ class OrderedItem(models.Model):
     ordered_id = models.AutoField(primary_key=True)
     item = models.ForeignKey(Items,related_name='order_item',on_delete=None)
     item_quantity = models.IntegerField()
-    item_size = models.FloatField()
-    item_size_type = models.CharField(max_length=20)
+    item_size = models.FloatField(default=None, blank=True, null=True)
+    item_size_type = models.CharField(max_length=20,default=None, blank=True, null=True)
     user_email = models.ForeignKey(UserAccount, db_column='user_email',on_delete=None)
     order_date = models.CharField(max_length=20)
     order_status = models.CharField(max_length=30)

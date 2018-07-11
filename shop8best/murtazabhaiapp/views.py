@@ -306,7 +306,7 @@ class AddItemToCart(APIView):
             item_id = data['item_id']
             item_size = data['item_size']
             item_size_type = data['item_size_type']
-            item = Items.objects.get(item_id = item_id)
+            item = Items.objects.get(item_id=item_id)
             item_size = item_size
             item_size_type = item_size_type
             user = UserAccount.objects.get(user_email=email)

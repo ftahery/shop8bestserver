@@ -82,6 +82,7 @@ class OrderedListView(generics.ListCreateAPIView):
 
         return Response("")
 
+
 class CreateUser(generics.CreateAPIView):
 
     def get(self,request):

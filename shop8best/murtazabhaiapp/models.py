@@ -66,7 +66,7 @@ class UserAddresses(models.Model):
 
 
 class CartItems(models.Model):
-    item = models.ForeignKey(Items,related_name='cart_item',on_delete=None)
+    item = models.ForeignKey(Items,db_column='item',on_delete=None)
     item_quantity = models.IntegerField()
     item_size = models.FloatField(default=None, blank=True, null=True)
     item_size_type = models.CharField(max_length=20,default=None, blank=True, null=True)

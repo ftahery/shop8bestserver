@@ -54,14 +54,14 @@ class UserAccountListSerializer(serializers.ModelSerializer):
 
 class CartItemsListSerializer(serializers.ModelSerializer):
 
-    item_id = serializers.IntegerField(source='cart_item.item_id')
-    item_name = serializers.CharField(source='cart_item.item_name')
-    item_price = serializers.DecimalField(source='cart_item.item_price',max_digits=5, decimal_places=2)
-    item_carat = serializers.IntegerField(source='cart_item.item_carat')
-    item_color = serializers.CharField(source='cart_item.item_color')
-    item_image = serializers.ImageField(source='cart_item.item_image')
-    item_weight = serializers.DecimalField(source='cart_item.item_weight',max_digits=10, decimal_places=5)
-    item_type = serializers.CharField(source='cart_item.item_type')
+    item_id = serializers.IntegerField(source='item.item_id')
+    item_name = serializers.CharField(source='item.item_name')
+    item_price = serializers.DecimalField(source='item.item_price',max_digits=5, decimal_places=2)
+    item_carat = serializers.IntegerField(source='item.item_carat')
+    item_color = serializers.CharField(source='item.item_color')
+    item_image = serializers.ImageField(source='item.item_image')
+    item_weight = serializers.DecimalField(source='item.item_weight',max_digits=10, decimal_places=5)
+    item_type = serializers.CharField(source='item.item_type')
     user_email = serializers.CharField(source='user_email.user_email')
 
     class Meta:

@@ -19,14 +19,16 @@ class ItemListSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(serializers.ModelSerializer):
 
-    user_building_details = serializers.CharField(source='delivery_address.user_building_details')
-    user_street_details = serializers.CharField(source='delivery_address.user_street_details')
-    user_country = serializers.CharField(source='delivery_address.user_country')
     user_area = serializers.CharField(source='delivery_address.user_area')
+    user_block = serializers.CharField(source='delivery_address.user_block')
+    user_street = serializers.CharField(source='delivery_address.user_street')
+    user_jedda = serializers.CharField(source='delivery_address.user_jedda')
+    user_house = serializers.CharField(source='delivery_address.user_house')
+    user_floor = serializers.CharField(source='delivery_address.user_floor')
 
     class Meta:
         model = Orders
-        fields = ('order_id','user_contact_number','user_building_details','user_street_details','user_country','user_area')
+        fields = ('order_id','user_contact_number','user_area','user_block','user_street','user_jedda','user_house','user_floor')
 
 
 class OrderedItemListSerilizer(serializers.ModelSerializer):
@@ -94,8 +96,8 @@ class UserAddressesListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserAddresses
-        fields = ('address_id','user_name','user_contact_number','user_building_details',
-                  'user_street_details','user_pincode','user_country','user_area','user_email')
+        fields = ('address_id','user_name','user_contact_number','user_area',
+                  'user_block','user_street','user_jedda','user_house','user_floor')
 
 
 

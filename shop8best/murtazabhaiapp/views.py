@@ -10,6 +10,7 @@ from django.core import serializers
 import requests
 import json
 from django.core.mail import send_mail
+from django.template import loader
 
 client_id = "827748585652-1huqi76j434rgvavviimlrquutlp9lgh.apps.googleusercontent.com"
 
@@ -36,8 +37,8 @@ def getEmailandAud(self,request):
 
 
 class DeleteEverythingFromOrder(APIView):
-	
-    def get(self,request):
+
+    def get(self):
         OrderedItem.objects.all().delete()
         return Response("")
 
@@ -108,17 +109,41 @@ class PlaceOrder(generics.ListCreateAPIView):
             cart_items = CartItems.objects.filter(user_email=user)
 
             delivery_address = UserAddresses.objects.get(address_id=order_data['address_id'])
+            description = order_data['user_description']
             new_order = Orders(delivery_address=delivery_address)
             new_order.save()
+
+            total_amount = 0.000
+            item_prices = []
 
             for cart_item in cart_items:
                 order_item = OrderedItem(item=cart_item.item,item_quantity=cart_item.item_quantity,
                                          item_size=cart_item.item_size,item_size_type=cart_item.item_size_type,
-                                         user_email=user,order_id=new_order,order_date=order_data['order_date'],
+                                         user_email=user,order_id=new_order,order_date=order_data['order_date'], user_description=description,
                                          order_status="Processing")
+                total_amount += total_amount + (cart_item.item_quantity * cart_item.item.item_price)
+                item_prices.append(cart_item.item_quantity * cart_item.item.item_price)
                 order_item.save()
+
+            items_and_prices = zip(cart_items,item_prices)
+
+            context = dict({
+                'items_and_prices': items_and_prices,
+                'description': description,
+                'delivery_address': delivery_address,
+                'total_amount': total_amount,
+                'delivery_amount': "Will be sent later"
+            })
+            template = loader.render_to_string('murtazabhaiapp/email_template.html', context)
+
+            send_mail('Order placed successfully',
+                      'Thank you for ordering from Shop8Best',
+                      'info@shop8best.com',
+                      [email, 'murtazatahery110@yahoo.com'],
+                      html_message=template,)
+
             cart_items.delete()
-            send_mail('Order placed successfully','','info@shop8best.com',[email,'murtazatahery110@yahoo.com'])
+
             return JsonResponse({"message":True})
 
         return Response("")
@@ -214,30 +239,34 @@ class UpdateUserAddress(generics.CreateAPIView):
             address_id = data['address_id']
             user_name = data['user_name']
             user_contact_number = data['user_contact_number']
-            user_building_details = data['user_building_details']
-            user_street_details = data['user_street_details']
-            user_pincode = data['user_pincode']
             user_area = data['user_area']
-            user_country = data['user_country']
+            user_block = data['user_block']
+            user_street = data['user_street']
+            user_jedda = data['user_jedda']
+            user_house = data['user_house']
+            user_floor = data['user_floor']
+            user_other_contact_info = data['user_other_contact_info']
 
             user_email = UserAccount.objects.get(user_email=email)
 
             if address_id==0:
                 new_address = UserAddresses(user_name=user_name,user_contact_number=user_contact_number,
-                                            user_building_details=user_building_details,
-                                            user_street_details=user_street_details,user_pincode=user_pincode,
-                                            user_area=user_area,user_country=user_country,user_email=user_email)
+                                            user_area=user_area, user_block=user_block,
+                                            user_street=user_street,user_jedda=user_jedda,
+                                            user_house=user_house,user_floor=user_floor,user_other_contact_info=user_other_contact_info,user_email=user_email)
                 new_address.save()
                 return JsonResponse({"message":"Success","address_id":new_address.address_id})
 
             update_address = UserAddresses.objects.get(address_id=address_id)
             update_address.user_name = user_name
             update_address.user_contact_number = user_contact_number
-            update_address.user_building_details = user_building_details
-            update_address.user_street_details = user_street_details
-            update_address.user_pincode = user_pincode
             update_address.user_area = user_area
-            update_address.user_country = user_country
+            update_address.user_block = user_block
+            update_address.user_street = user_street
+            update_address.user_jedda = user_jedda
+            update_address.user_house = user_house
+            update_address.user_floor = user_floor
+            update_address.user_other_contact_info = user_other_contact_info
 
             update_address.save()
             return JsonResponse({"address_id":update_address.address_id})

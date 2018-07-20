@@ -26,8 +26,8 @@ urlpatterns=[
     url(r'^getPastOrders/$',OrderedListView.as_view(),name='getPastOrders'),
     url(r'^sendEmail/$',SendEmail.as_view(),name='sendEmail'),
     url(r'^deleteOrders/$',DeleteEverythingFromOrder.as_view(),name='deleteOrders'),
-    url(r'createUser/$',CreateUser.as_view(),name='createUser'),
-    url(r'getItemByType/item_type/(?P<item_type>\D+)/$',ItemByTypeListView.as_view(),name='getItemByType')
+    url(r'^createUser/$',CreateUser.as_view(),name='createUser'),
+    url(r'^getItemByType/item_type/(?P<item_type>\D+)/$',ItemByTypeListView.as_view(),name='getItemByType'),
 
 ]
 

@@ -164,7 +164,7 @@
                 </td>
             </tr>
 
-            {% if ordered_item %}
+            {% if items_and_prices %}
 
                 {% for item,price in items_and_prices %}
 
@@ -174,7 +174,7 @@
                         </td>
 
                         <td>
-                            {{item.item.item_quantity}}
+                            {{item.item_quantity}}
                         </td>
 
                         <td>
@@ -187,9 +187,7 @@
             {% endif %}
             <tr class="total">
                 <td></td>
-                 <td>
-                   Delivery Charges: {{delivery_amount}}
-                </td>
+                <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
                 <td>
                     <strong>Total: {{total_amount}} KD </strong>
                 </td>

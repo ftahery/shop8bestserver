@@ -11,6 +11,7 @@ import requests
 import json
 from django.core.mail import send_mail
 from django.template import loader
+import threading
 
 client_id = "827748585652-1huqi76j434rgvavviimlrquutlp9lgh.apps.googleusercontent.com"
 
@@ -121,33 +122,37 @@ class PlaceOrder(generics.ListCreateAPIView):
                                          item_size=cart_item.item_size,item_size_type=cart_item.item_size_type,
                                          user_email=user,order_id=new_order,order_date=order_data['order_date'], user_description=description,
                                          order_status="Processing")
-                total_amount += total_amount + (cart_item.item_quantity * cart_item.item.item_price)
+                total_amount += total_amount + float((cart_item.item_quantity * cart_item.item.item_price))
                 item_prices.append(cart_item.item_quantity * cart_item.item.item_price)
                 order_item.save()
 
             items_and_prices = zip(cart_items,item_prices)
 
-            context = dict({
-                'items_and_prices': items_and_prices,
-                'description': description,
-                'delivery_address': delivery_address,
-                'total_amount': total_amount,
-                'delivery_amount': "Will be sent later"
-            })
-            template = loader.render_to_string('murtazabhaiapp/email_template.html', context)
-
-            send_mail('Order placed successfully',
-                      'Thank you for ordering from Shop8Best',
-                      'info@shop8best.com',
-                      [email, 'murtazatahery110@yahoo.com'],
-                      html_message=template,)
-
-            cart_items.delete()
+            t = threading.Thread(target=self.place_email(delivery_address,description,email,items_and_prices,total_amount,cart_items))
+            t.setDaemon(True)
+            t.start()
 
             return JsonResponse({"message":True})
 
         return Response("")
 
+
+    def place_email(self, delivery_address, description, email, items_and_prices, total_amount,cart_items):
+        context = dict({
+            'items_and_prices': items_and_prices,
+            'description': description,
+            'delivery_address': delivery_address,
+            'total_amount': total_amount,
+            'delivery_amount': "Will be sent later"
+        })
+        template = loader.render_to_string('murtazabhaiapp/email_template.html', context)
+        send_mail('Order placed successfully',
+                  'Thank you for ordering from Shop8Best',
+                  'info@shop8best.com',
+                  [email, 'murtazatahery110@yahoo.com'],
+                  html_message=template, )
+
+        cart_items.delete()
 
 
 class CartItemsListView(generics.ListCreateAPIView):

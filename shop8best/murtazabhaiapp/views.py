@@ -39,8 +39,14 @@ def getEmailandAud(self,request):
 
 class DeleteEverythingFromOrder(APIView):
 
-    def get(self):
+    def get(self,request):
+        CartItems.objects.all().delete()
+        Items.objects.all().delete()
+        UserAddresses.objects.all().delete()
+        UserAccount.objects.all().delete()
         OrderedItem.objects.all().delete()
+        Orders.objects.all().delete()
+
         return Response("")
 
 
@@ -286,7 +292,7 @@ class CartCountAPIView(generics.CreateAPIView):
 
         if aud == client_id:
             user = UserAccount.objects.get(user_email=email)
-            cart_items_count = CartItems.objects.filter(user_email=user.user_email).count()
+            cart_items_count = CartItems.objects.filter(user_email=user).count()
             print (cart_items_count)
             return JsonResponse({email:cart_items_count})
 

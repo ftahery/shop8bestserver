@@ -31,15 +31,12 @@ class Items(models.Model):
 
 
 class ItemImages(models.Model):
+    item_image_id = models.AutoField(primary_key=True)
     item_image = models.ImageField(upload_to='images')
     item = models.ForeignKey(Items, on_delete=None)
 
     def __str__(self):
         return "{}".format(str(self.item))
-
-    @property
-    def item_id(self):
-        return self.item.item_id
 
 
 class UserAccount(models.Model):
@@ -72,6 +69,7 @@ class UserAddresses(models.Model):
 
 
 class CartItems(models.Model):
+    cart_item_id = models.AutoField(primary_key=True)
     item = models.ForeignKey(Items, on_delete=None)
     item_quantity = models.IntegerField()
     item_size = models.FloatField(default=None, blank=True, null=True)

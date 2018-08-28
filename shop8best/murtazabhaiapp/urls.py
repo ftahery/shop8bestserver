@@ -5,7 +5,6 @@ from .views import ItemListView,OrderListView,CartItemsListView,UserAccountListV
     SendEmail,DeleteEverythingFromOrder,CreateUser,ItemByTypeListView
 from rest_framework.urlpatterns import format_suffix_patterns
 
-
 urlpatterns=[
     url(r'^getItems/$',ItemListView.as_view(),name='itemsList'),
     url(r'^getOrders/$', OrderListView.as_view(), name='orderList'),

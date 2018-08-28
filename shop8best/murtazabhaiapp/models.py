@@ -153,16 +153,16 @@ class OrderedItem(models.Model):
     item_size_type = models.CharField(max_length=20, default=None, blank=True, null=True)
     user_email = models.ForeignKey(UserAccount, on_delete=None)
     order_date = models.CharField(max_length=20)
-    order_status = models.CharField(max_length=30)
+    order_status = models.CharField(max_length=30,default="Processing")
     order_id = models.ForeignKey(Orders, on_delete=None)
     user_description = models.CharField(max_length=200)
 
     def __str__(self):
         return "{}".format(str(self.item) + "-" + str(self.item_quantity) + " - " + str(self.user_email))
 
-    @property
-    def item_id(self):
-        return self.item.item_id
+    #@property
+    #def item_id(self):
+    #    return self.item.item_id
 
     @property
     def item_name(self):
@@ -178,7 +178,7 @@ class OrderedItem(models.Model):
 
     @property
     def item_image(self):
-        return self.item.item_image.url
+        return self.item.item_image.url if self.item.item_image else ''
 
     @property
     def item_type(self):

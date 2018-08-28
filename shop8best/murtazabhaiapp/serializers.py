@@ -57,6 +57,9 @@ class ItemImagesListSerializer(serializers.ModelSerializer):
         # returning image url if there is an image else blank string
         return instance.item_image.url if instance.item_image else ''
 
+    def get_item_id(self, instance):
+        return instance.item.item_id
+
 
 class UserAddressesListSerializer(serializers.ModelSerializer):
     class Meta:

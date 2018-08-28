@@ -5,13 +5,6 @@ from django.contrib import admin
 from .models import ItemImages,UserAddresses,UserAccount,CartItems,Items,Orders,OrderedItem
 
 # Register your models here.
-class ItemImageInLine(admin.TabularInline):
-    model = ItemImages
-    extra = 4
-
-class ImageAdmin(admin.ModelAdmin):
-    inlines = [ItemImageInLine,]
-
 
 admin.site.register(Items)
 admin.site.register(ItemImages)

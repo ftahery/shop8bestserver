@@ -15,6 +15,8 @@ from django.template import loader
 import threading
 
 client_id = "827748585652-1huqi76j434rgvavviimlrquutlp9lgh.apps.googleusercontent.com"
+facebook_secret = "5fae37c8e79a955d85b1eb1f4c2bb7fb"
+facebook_app_token = "2175317116048015|NqG0hUo7zV3NuzyOwu7B5fTkk3Y"
 
 
 def validate_token(self, request):
@@ -24,18 +26,65 @@ def validate_token(self, request):
     response = requests.get("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + access_token)
     data = response.json()
     aud = data['audience']
-    return aud
+    if aud == client_id:
+        return True
+    return False
 
 
-def getEmailandAud(self, request):
+def get_email_after_authentication(self, request):
+    access_token = request.META.get('HTTP_AUTHORIZATION')
+    sign_in = request.META.get('HTTP_SIGNIN')
+
+    print (sign_in)
+
+    if sign_in == "facebook":
+        response = requests.get(
+            "https://graph.facebook.com/debug_token?input_token=" + access_token + "&access_token=" + facebook_app_token)
+        data = response.json()
+        app_id = data['data']['app_id']
+        application = data['data']['application']
+        is_valid = data['data']['is_valid']
+        user_id = data['data']['user_id']
+        response = requests.get("https://graph.facebook.com/v3.0/me?fields=id,name,email&access_token=" + access_token)
+        data = response.json()
+        id = data['id']
+        email = data['email']
+
+        if user_id == id and application == "Shop8Best" and is_valid == True:
+            return True, email
+
+        return False, ""
+
+    elif sign_in == "google":
+        response = requests.get("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + access_token)
+        data = response.json()
+        aud = data['audience']
+        email = data['email']
+        if aud == client_id:
+            return True, email
+
+        return False, ""
+
+
+def facebook_validate_token_with_email(self, request):
     authorization_header = request.META.get('HTTP_AUTHORIZATION')
     access_token = authorization_header
-    print (access_token)
-    response = requests.get("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + access_token)
+    response = requests.get(
+        "https://graph.facebook.com/debug_token?input_token=" + access_token + "&access_token=" + facebook_app_token)
     data = response.json()
-    aud = data['audience']
+    app_id = data['data']['app_id']
+    application = data['data']['application']
+    is_valid = data['data']['is_valid']
+    user_id = data['data']['user_id']
+    response = requests.get("https://graph.facebook.com/v3.0/me?fields=id,name,email&access_token=" + access_token)
+    data = response.json()
+    id = data['id']
     email = data['email']
-    return aud, email
+
+    if app_id == id and application == "Shop8Best" and is_valid == True:
+        return True, email
+
+    return False, ""
 
 
 class DeleteEverythingFromOrder(APIView):
@@ -62,9 +111,7 @@ class ItemListView(generics.ListCreateAPIView):
 
 class OrderListView(generics.ListCreateAPIView):
     def get(self, request):
-        aud = validate_token(self, request)
-
-        if aud == client_id:
+        if validate_token(self, request):
             orders = Orders.objects.all()
             serializer_class = OrderListSerializer(orders, many=True)
             return JsonResponse(serializer_class.data, safe=False)
@@ -74,9 +121,10 @@ class OrderListView(generics.ListCreateAPIView):
 
 class OrderedListView(generics.ListCreateAPIView):
     def get(self, request, **kwargs):
-        aud, email = getEmailandAud(self, request)
 
-        if aud == client_id:
+        valid, email = get_email_after_authentication(self, request)
+
+        if valid:
 
             try:
                 ordered_items = OrderedItem.objects.filter(user_email=email)
@@ -90,9 +138,11 @@ class OrderedListView(generics.ListCreateAPIView):
 
 class CreateUser(generics.CreateAPIView):
     def get(self, request):
-        aud, email = getEmailandAud(self, request)
+        print (request)
 
-        if aud == client_id:
+        valid, email = get_email_after_authentication(self, request)
+
+        if valid:
             user = UserAccount(user_email=email)
             user.save()
             return JsonResponse({"message": True})
@@ -103,9 +153,9 @@ class CreateUser(generics.CreateAPIView):
 
 class PlaceOrder(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             order_data = json.loads(request.body.decode('utf-8'))
             user = UserAccount.objects.get(user_email=email)
             cart_items = CartItems.objects.filter(user_email=user)
@@ -121,8 +171,9 @@ class PlaceOrder(generics.ListCreateAPIView):
             for cart_item in cart_items:
                 order_item = OrderedItem(item=cart_item.item, item_quantity=cart_item.item_quantity,
                                          item_size=cart_item.item_size, item_size_type=cart_item.item_size_type,
-                                         user_email=user, order_id=new_order, order_date=order_data['order_date'],
-                                         user_description=description,
+                                         user_email=user, order_id=new_order.order_id,
+                                         order_date=order_data['order_date'],
+                                         user_description=str(description),
                                          order_status="Processing")
                 total_amount += total_amount + float((cart_item.item_quantity * cart_item.item.item_price))
                 item_prices.append(cart_item.item_quantity * cart_item.item.item_price)
@@ -160,9 +211,9 @@ class PlaceOrder(generics.ListCreateAPIView):
 
 class CartItemsListView(generics.ListCreateAPIView):
     def get(self, request):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             user = UserAccount.objects.get(user_email=email)
             cart_items = CartItems.objects.filter(user_email=user)
             serializer_class = CartItemsListSerializer(cart_items, many=True)
@@ -173,9 +224,7 @@ class CartItemsListView(generics.ListCreateAPIView):
 
 class UserAccountListView(generics.ListCreateAPIView):
     def get(self, request):
-        aud = validate_token(self, request)
-
-        if aud == client_id:
+        if validate_token(self, request):
             user_account = UserAccount.objects.all()
             serializer_class = UserAccountListSerializer(user_account, many=True)
             return JsonResponse(serializer_class.data, safe=False)
@@ -192,9 +241,9 @@ class ItemImagesListView(generics.ListCreateAPIView):
 
 class UserAddressesListView(generics.ListCreateAPIView):
     def get(self, request):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             user_addresses = UserAddresses.objects.filter(user_email=email)
             serializer_class = UserAddressesListSerializer(user_addresses, many=True)
             return JsonResponse(serializer_class.data, safe=False)
@@ -204,9 +253,9 @@ class UserAddressesListView(generics.ListCreateAPIView):
 
 class DeleteUserAddress(generics.CreateAPIView):
     def get(self, request, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             address_id = kwargs['address_id']
             user_address = UserAddresses.objects.get(address_id=address_id, user_email=email)
             user_address.delete()
@@ -217,9 +266,9 @@ class DeleteUserAddress(generics.CreateAPIView):
 
 class RetrieveUserAddress(generics.CreateAPIView):
     def get(self, request, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             address_id = kwargs['address_id']
             user_address = UserAddresses.objects.get(address_id=address_id, user_email=email)
             data = serializers.serialize("json", user_address)
@@ -230,9 +279,9 @@ class RetrieveUserAddress(generics.CreateAPIView):
 
 class UpdateUserAddress(generics.CreateAPIView):
     def post(self, request, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             if request.method == 'POST':
                 print (request.body)
             data = json.loads(request.body.decode('utf-8'))
@@ -278,9 +327,9 @@ class UpdateUserAddress(generics.CreateAPIView):
 
 class CartCountAPIView(generics.CreateAPIView):
     def get(self, request):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             user = UserAccount.objects.get(user_email=email)
             cart_items_count = CartItems.objects.filter(user_email=user).count()
             print (cart_items_count)
@@ -291,9 +340,9 @@ class CartCountAPIView(generics.CreateAPIView):
 
 class IsCartItemPresent(APIView):
     def get(self, request, *args, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             item_id = kwargs.get('item_id')
             items = Items.objects.get(item_id=item_id)
             user = UserAccount.objects.get(user_email=email)
@@ -309,9 +358,9 @@ class IsCartItemPresent(APIView):
 
 class RemoveItemFromCart(APIView):
     def get(self, request, *args, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             item_id = kwargs.get('item_id')
             items = Items.objects.get(item_id=item_id)
             user = UserAccount.objects.get(user_email=email)
@@ -325,9 +374,9 @@ class RemoveItemFromCart(APIView):
 
 class AddItemToCart(APIView):
     def post(self, request):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             if request.method == 'POST':
                 print (request.body)
             data = json.loads(request.body.decode('utf-8'))
@@ -349,28 +398,26 @@ class AddItemToCart(APIView):
 
 class AddQuantityToCartItem(APIView):
     def get(self, request, *args, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             item_id = kwargs.get('item_id')
-            quantity = kwargs.get('quantity')
             items = Items.objects.get(item_id=item_id)
-            if int(quantity) + 1 > int(items.item_quantity):
-                return JsonResponse({"message": False})
-
             user = UserAccount.objects.get(user_email=email)
-            existingCartItem = CartItems.objects.get(item=items, user_email=user.user_email)
-            print (existingCartItem)
-            existingCartItem.item_quantity += 1
-            existingCartItem.save(update_fields=['item_quantity'])
+            existing_cart_item = CartItems.objects.get(item=items, user_email=user.user_email)
+            print (existing_cart_item)
+            existing_cart_item.item_quantity += 1
+            existing_cart_item.save(update_fields=['item_quantity'])
             return JsonResponse({"message": True})
+
+        return Response("")
 
 
 class MinusQuantityFromCartItem(APIView):
     def get(self, request, *args, **kwargs):
-        aud, email = getEmailandAud(self, request)
+        valid, email = get_email_after_authentication(self, request)
 
-        if aud == client_id:
+        if valid:
             item_id = kwargs.get('item_id')
             items = Items.objects.get(item_id=item_id)
             user = UserAccount.objects.get(user_email=email)
